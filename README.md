@@ -21,5 +21,7 @@
 
 Once all the depencies have been acquired:
 
-`cmake -B ./build`
-` make -C ./build`
+```
+cmake -B ./build
+make -C ./build
+```
