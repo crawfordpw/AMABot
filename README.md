@@ -13,7 +13,7 @@
 * [OpenSSL](https://openssl.org/) (whichever `-dev` package comes with your OS)
 * [zlib](https://zlib.net) (whichever `-dev` package comes with your OS)
 
-#### Libcurlpp requires:
+#### Curlpp requires:
 
 * [libcurl](https://curl.se/) (whichever `-dev` package. Using openssl currently)
 
