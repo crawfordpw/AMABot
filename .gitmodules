@@ -1,3 +1,6 @@
 [submodule "external/DPP"]
 	path = external/DPP
 	url = https://github.com/brainboxdotcc/DPP.git
+[submodule "external/curlpp"]
+	path = external/curlpp
+	url = https://github.com/jpbarrette/curlpp.git
