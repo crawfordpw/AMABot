@@ -1,0 +1,18 @@
+/////////////////////////////////////////////////////////////////////
+//
+// AmaBotConfig.h
+//
+// Configuration and definitions file for the bot.
+//
+/////////////////////////////////////////////////////////////////////
+
+#ifndef AMA_BOT_CONFIG_HPP
+#define AMA_BOT_CONFIG_HPP
+
+#define AMAB_VERSION_MAJOR @QuoteMebot_VERSION_MAJOR@
+#define AMAB_VERSION_MINOR @QuoteMebot_VERSION_MINOR@
+#define AMAB_VERSION_PATCH @QuoteMebot_VERSION_PATCH@
+
+#cmakedefine USE_LOGGER
+
+#endif
