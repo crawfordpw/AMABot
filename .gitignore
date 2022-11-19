@@ -30,3 +30,4 @@ _deps
 *.exe
 *.out
 *.app
+config.json

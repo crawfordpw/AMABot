@@ -11,6 +11,7 @@
 
 #include <map>
 #include <dpp/dpp.h>
+#include <dpp/nlohmann/json.hpp>
 #include <AmaBotConfig.h>
 
 #ifdef USE_LOGGER
@@ -21,6 +22,7 @@ namespace AMAB
 {
 
 // Typedefs
+typedef nlohmann::json Json;
 typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *)> SlashCommandFunction;
 
 // Forward Declarations

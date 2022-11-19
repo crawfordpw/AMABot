@@ -45,7 +45,7 @@ add_subdirectory(${EXTERNAL_DEPENDENCIES}/DPP)
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/ MAIN_SOURCES)
 
-configure_file(config.h.in AmaConfig.h)
+configure_file(config.h.in AmaBotConfig.h)
 
 set(SOURCES
     ${SOURCES} 
