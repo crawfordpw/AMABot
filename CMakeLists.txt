@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT_NAME "AMAbot")
 project(
@@ -21,6 +21,12 @@ set(RUN_LDCONFIG "OFF")
 set(DPP_INSTALL "OFF")
 set(DPP_BUILD_TEST "OFF")
 
+# Curlpp options
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+include(FindPkgConfig)
+#pkg_check_modules(CURLPP REQUIRED curlpp)
+
 # Downloads all git submodules
 find_package(Git QUIET)
 if(GIT_FOUND AND EXISTS "$PROJECT_SOURCE_DIR}/.git")
@@ -38,10 +44,14 @@ endif()
 
 # Check all git submodules
 if(NOT EXISTS "${EXTERNAL_DEPENDENCIES}/DPP/CMakeLists.txt")
-    message(FATAL_ERROR "DPP submodules not downloaded! Please update submodule")
+    message(FATAL_ERROR "DPP submodule not downloaded! Please update submodule")
+endif()
+if(NOT EXISTS "${EXTERNAL_DEPENDENCIES}/curlpp/CMakeLists.txt")
+    message(FATAL_ERROR "Curlpp submodule not downloaded! Please update submodule")
 endif()
 
 add_subdirectory(${EXTERNAL_DEPENDENCIES}/DPP)
+add_subdirectory(${EXTERNAL_DEPENDENCIES}/curlpp)
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/src/ MAIN_SOURCES)
 
@@ -68,6 +78,7 @@ if(BUILD_WITH_MAIN_CPP)
 
     target_link_libraries(${PROJECT_NAME}
         dpp
+        ${CURLPP_LDFLAGS}
     )
 endif()
 
@@ -76,6 +87,7 @@ target_compile_options(${PROJECT_NAME} PUBLIC -Wall)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${EXTERNAL_DEPENDENCIES}DPP/include
+    #${EXTERNAL_DEPENDENCIES}curlpp/include
     ${INCLUDES}
 )
 
