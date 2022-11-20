@@ -16,8 +16,6 @@
 #include <queue>
 #include <atomic>
 
-#include "Logger.hpp"
-
 namespace AMAB
 {
 
@@ -58,9 +56,9 @@ class ThreadPool
         ThreadPool(int lNumThreads, int lNumResources = 0);
         ~ThreadPool(void);
 
-        void             AddTask(ThreadTask * lTask);
+        bool             AddTask(ThreadTask * lTask);
         void             SetResourceLimit(int lResourceLimit);
-        std::atomic<int> GetResourceLimit() { return mResourceLimit.load(); }
+        int              GetResourceLimit() { return mResourceLimit.load(); }
         std::mutex *     GetMutex()         { return &mMutex; }
 
     private:
@@ -75,8 +73,8 @@ class ThreadPool
         std::mutex               mMutex;            // Mutex for queue manipulation.
         std::condition_variable  mMutexCondition;   // Condition to allow threads to wait without hogging resources.
         std::vector<std::thread> mThreads;          // Our pool of threads.
-        std::queue<ThreadTask>   mTasks;            // Tasks for the threads to perform.
-        std::function<bool()>    mAtLimit;          // Function pointer to check if we reached the resource limit.
+        std::queue<ThreadTask *> mTasks;            // Tasks for the threads to perform.
+        std::function<bool()>    mNotAtLimit;       // Function pointer to check if we reached the resource limit.
 };
 
 //

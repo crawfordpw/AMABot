@@ -6,24 +6,42 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
+#include <unistd.h>
 #include <amabot/ApiAmaBot.hpp>
 
 typedef nlohmann::json Json;
 
-volatile bool gRunForever = true;
-volatile bool gSignalNum = EXIT_SUCCESS;
+std::condition_variable gMainCondition;
+volatile bool gSignalNum  = EXIT_SUCCESS;
 
-void signal_callback_handler(int lSignalNum) {
-#ifdef USE_LOGGER
-    AMAB::Logger::GetInstance()->Log("Caught signal " + lSignalNum);
-#endif
-    gRunForever = false;
+
+//--------//
+// SignalCallbackHandler
+//
+// Catches signals we are interested in so we can signal
+// the main event loop to termiante.
+//
+// param[in]    lSignalNum    Signal that was caught.
+//--------//
+//
+void SignalCallbackHandler(int lSignalNum)
+{
     gSignalNum = lSignalNum;
+    gMainCondition.notify_one();
 }
 
+//--------//
+// main
+//
+// Entry point of the program.
+//--------//
+//
 int main(int argc, char const * argv[])
 {
-    signal(SIGINT, signal_callback_handler);
+    std::mutex lMainMutex;
+    signal(SIGINT, SignalCallbackHandler);
+    signal(SIGTERM, SignalCallbackHandler);
+
 
 #ifdef USE_LOGGER
     AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
@@ -46,17 +64,25 @@ int main(int argc, char const * argv[])
 #endif
         return EXIT_FAILURE;
     }
-
 	lJsonConfig = Json::parse(lFile);
+
+    // Create thread pool for executing the bot's commands.
+    AMAB::ThreadPool * lThreadPool = new AMAB::ThreadPool(1);
 
     // Create and start our bot.
     dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig["token"]);
     lDiscordBot->start(dpp::st_return);
 
-    // Stay in this infinite loop until CTRL-C happens, then clean up.
-    while (gRunForever) {}
+    // Wait for SIGINT or SIGTERM signal to unblock and terminate gracefully.
+    std::unique_lock lLock(lMainMutex);
+    gMainCondition.wait(lLock);
+
+#ifdef USE_LOGGER
+    lLogger->Log("Caught signal " + std::to_string(gSignalNum) + ". Terminating program... ");
+#endif
 
     delete lDiscordBot;
+    delete lThreadPool;
 
     return gSignalNum;
 }

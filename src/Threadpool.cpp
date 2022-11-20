@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <amabot/ThreadPool.hpp>
+#include <amabot/Logger.hpp>
 
 namespace AMAB
 {
@@ -85,6 +86,11 @@ ThreadPool::ThreadPool(int lNumThreads, int lResourceLimit)
 {
     SetResourceLimit(lResourceLimit);
     Start();
+#ifdef USE_LOGGER
+    AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
+    lLogger->Log("Starting Thread Pool with " + mNumThreads + " threads");
+    lLogger->Log("Setting resource limit to " + mNumThreads);
+#endif
 }
 
 //--------//
@@ -98,10 +104,12 @@ ThreadPool::~ThreadPool(void)
 {
     Stop();
 
+    ThreadTask * lTask;
     while (!mTasks.empty())
     {
-        // This pop should be calling our destructor which would free any memory.
+        lTask = mTasks.front();
         mTasks.pop();
+        delete lTask;
     }
 }
 
@@ -121,7 +129,7 @@ void ThreadPool::SetResourceLimit(int lResourceLimit)
     if (lResourceLimit <= 0)
     {
         mResourceLimit.store(0);
-        mAtLimit = []() { return false; };
+        mNotAtLimit = []() { return true; };
         return;
     }
     else if (lResourceLimit <= mNumThreads)
@@ -132,7 +140,7 @@ void ThreadPool::SetResourceLimit(int lResourceLimit)
     {
         mResourceLimit.store(lResourceLimit);
     }
-    mAtLimit = [this]()
+    mNotAtLimit = [this]()
     {
         int          lSize;
         std::mutex * lMutex = this->GetMutex();
@@ -140,7 +148,7 @@ void ThreadPool::SetResourceLimit(int lResourceLimit)
         lMutex->lock();
         lSize = mTasks.size();
         lMutex->unlock();
-        return (lSize >= this->GetResourceLimit()) ? true : false;
+        return (lSize >= this->GetResourceLimit()) ? false : true;
     };
 }
 
@@ -178,11 +186,61 @@ void ThreadPool::Stop(void)
     mThreads.clear();
 }
 
+//--------//
+// ThreadLoop
+//
+// Adds a task to the queue in a thread-safe manner.
+// Once a task has been added, the pool owns the memory for it.
+//
+// returns      Boolean value of whether the task has been added (true)
+//              succesffully or not (false).
+//--------//
+//
+bool ThreadPool::AddTask(ThreadTask * lTask)
+{
+    bool lCanAdd = mNotAtLimit();
+
+    if(lCanAdd)
+    {
+        mMutex.lock();
+        mTasks.push(lTask);
+        mMutex.unlock();
+        mMutexCondition.notify_one();
+    }
+    return lCanAdd;
+}
+
+//--------//
+// ThreadLoop
+//
+// This is where all the threads will retrieve and perform any
+// tasks that need to be executed. If there is a task, a thread will
+// acquire the ThreadTask and pop it off the queue. Then it will call
+// the function to actually do the work and free up the memory once
+// the work is compelete.
+//--------//
+//
 void ThreadPool::ThreadLoop(void)
 {
     while (true)
     {
-        
+        ThreadTask * lTask;
+        {
+            std::unique_lock<std::mutex> lLock(mMutex);
+            mMutexCondition.wait(lLock, [this]() { return !mTasks.empty() || mStopThreads; });
+            if (mStopThreads.load())
+            {
+                return;
+            }
+            lTask = mTasks.front();
+            mTasks.pop();
+        }
+
+        if(lTask->mFunction)
+        {
+            lTask->mFunction(lTask->mMessage);
+        }
+        delete lTask;
     }
 }
 
