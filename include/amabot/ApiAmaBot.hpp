@@ -22,7 +22,6 @@ namespace AMAB
 {
 
 // Typedefs
-typedef nlohmann::json Json;
 typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *)> SlashCommandFunction;
 
 // Forward Declarations

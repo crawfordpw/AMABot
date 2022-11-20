@@ -77,13 +77,14 @@ if(BUILD_WITH_MAIN_CPP)
     add_executable(${PROJECT_NAME} ${SOURCES})
 
     target_link_libraries(${PROJECT_NAME}
+        pthread
         dpp
         ${CURLPP_LDFLAGS}
     )
 endif()
 
 #add_library(${PROJECT_NAME} OBJECT ${SOURCES})
-target_compile_options(${PROJECT_NAME} PUBLIC -Wall)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${EXTERNAL_DEPENDENCIES}DPP/include

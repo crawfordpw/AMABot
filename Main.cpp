@@ -8,6 +8,8 @@
 
 #include <amabot/ApiAmaBot.hpp>
 
+typedef nlohmann::json Json;
+
 volatile bool gRunForever = true;
 volatile bool gSignalNum = EXIT_SUCCESS;
 
@@ -28,7 +30,7 @@ int main(int argc, char const * argv[])
     lLogger->Log("Logger has been enabled");
 #endif
 
-    AMAB::Json  lJsonConfig;
+    Json        lJsonConfig;
     std::string lConfigLocation = "../config.json";
 
     if (argc == 2)
@@ -45,7 +47,7 @@ int main(int argc, char const * argv[])
         return EXIT_FAILURE;
     }
 
-	lJsonConfig = AMAB::Json::parse(lFile);
+	lJsonConfig = Json::parse(lFile);
 
     // Create and start our bot.
     dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig["token"]);

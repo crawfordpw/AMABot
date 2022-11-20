@@ -12,7 +12,6 @@ namespace AMAB
 {
 
 //--------//
-//
 // CreateBot
 //
 // Creates the discord bot, registering all commmands and sets up handling
