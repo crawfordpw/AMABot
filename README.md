@@ -3,6 +3,7 @@
 ## Dependencies
 
 ### Build requirements
+* Only builds for unix-based systems. Windows not currently supported.
 * [cmake](https://cmake.org/) (version 3.14+)
 * A supported C++ compiler like g++ (https://gcc.gnu.org)
 

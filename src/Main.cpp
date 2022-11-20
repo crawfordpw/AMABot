@@ -42,7 +42,6 @@ int main(int argc, char const * argv[])
     signal(SIGINT, SignalCallbackHandler);
     signal(SIGTERM, SignalCallbackHandler);
 
-
 #ifdef USE_LOGGER
     AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
     lLogger->Log("Logger has been enabled");

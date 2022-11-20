@@ -20,7 +20,8 @@ namespace AMAB
 {
 
 // Typedefs
-typedef std::function<void(void * )> ThreadCallback;
+typedef std::function<void(void * )>                 ThreadCallback;
+typedef std::function<void(void *, ThreadCallback )> ThreadFunction;
 
 //========//
 // ThreadTask
@@ -37,7 +38,7 @@ class ThreadTask
         ThreadTask(void * lMessage, int lSize);
         ~ThreadTask();
 
-        ThreadCallback mFunction;   // The main work for the task to perform.
+        ThreadFunction mFunction;   // The main work for the task to perform.
         ThreadCallback mCallback;   // A callback once the main work is complete.
         void *         mMessage;    // Parameter to the main callback.
 };

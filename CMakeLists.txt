@@ -11,8 +11,6 @@ project(
 set(EXTERNAL_DEPENDENCIES ${PROJECT_SOURCE_DIR}/external) 
 
 # AMABot options
-# TODO: Figure out how to build without main.
-set(BUILD_WITH_MAIN_CPP "ON")
 set(USE_LOGGER "ON")
 
 # DPP options
@@ -68,20 +66,13 @@ set(INCLUDES
     ${PROJECT_SOURCE_DIR}/include
 )
 
-if(BUILD_WITH_MAIN_CPP)
-    set(SOURCES
-        ${SOURCES} 
-        ${PROJECT_SOURCE_DIR}/Main.cpp
-    )
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-    add_executable(${PROJECT_NAME} ${SOURCES})
-
-    target_link_libraries(${PROJECT_NAME}
-        pthread
-        dpp
-        ${CURLPP_LDFLAGS}
-    )
-endif()
+target_link_libraries(${PROJECT_NAME}
+    pthread
+    dpp
+    ${CURLPP_LDFLAGS}
+)
 
 #add_library(${PROJECT_NAME} OBJECT ${SOURCES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)

@@ -117,9 +117,9 @@ ThreadPool::~ThreadPool(void)
 // SetResourceLimit
 //
 // If our resource limit is 0 or less, that indicates an "infinite" limit. Meaning
-// that we always want to return false for the Atlimit call. Otherwise, we set
-// our limit and assign a lambda to Atlimit indication that if our queue size
-// has reached our limit, we'll return true.
+// that we always want to return true for the NotAtlimit call. Otherwise, we set
+// our limit and assign a lambda to NotAtlimit, indicating that if our queue size
+// has reached our limit, we'll return false.
 //
 // param[in]    lResourcelimit The max limit of resources this pool will service.              
 //--------//
@@ -238,11 +238,10 @@ void ThreadPool::ThreadLoop(void)
 
         if(lTask->mFunction)
         {
-            lTask->mFunction(lTask->mMessage);
+            lTask->mFunction(lTask->mMessage, lTask->mCallback);
         }
         delete lTask;
     }
 }
-
 
 };
