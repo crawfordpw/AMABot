@@ -15,13 +15,10 @@
 #include <condition_variable>
 #include <queue>
 #include <atomic>
+#include <dpp/dpp.h>
 
 namespace AMAB
 {
-
-// Typedefs
-typedef std::function<void(void * )>                 ThreadCallback;
-typedef std::function<void(void *, ThreadCallback )> ThreadFunction;
 
 //========//
 // ThreadTask
@@ -32,15 +29,20 @@ typedef std::function<void(void *, ThreadCallback )> ThreadFunction;
 
 class ThreadTask
 {
+    typedef std::function<void(ThreadTask *, void *)> ThreadCallback;
+
     public:
 
         ThreadTask();
         ThreadTask(void * lMessage, int lSize);
         ~ThreadTask();
 
-        ThreadFunction mFunction;   // The main work for the task to perform.
+        ThreadCallback mFunction;   // The main work for the task to perform.
         ThreadCallback mCallback;   // A callback once the main work is complete.
-        void *         mMessage;    // Parameter to the main callback.
+        void *         mMessage;    // Message for function to operate on.
+        dpp::cluster * mBot;        // Discord bot.
+        // TODO: Thinking about putting a name here to access an AI model's config json endpoint structure.
+        //       Or maybe the pointer to the part of json structure that contains it.
 };
 
 //========//
@@ -53,8 +55,12 @@ class ThreadTask
 class ThreadPool
 {
     public:
+        ThreadPool(const ThreadPool&) = delete;
+        ThreadPool& operator=(const ThreadPool&) = delete;
 
-        ThreadPool(int lNumThreads, int lNumResources = 0);
+        static ThreadPool * GetInstance() { static ThreadPool cInstance; return &cInstance; }
+
+        void Init(int lNumThreads, int lResourceLimit = 0);
         ~ThreadPool(void);
 
         bool             AddTask(ThreadTask * lTask);
@@ -63,6 +69,8 @@ class ThreadPool
         std::mutex *     GetMutex()         { return &mMutex; }
 
     private:
+
+        ThreadPool() : mStopThreads(false) {}
 
         void ThreadLoop(void);
         void Start(void);

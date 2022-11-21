@@ -14,7 +14,6 @@ typedef nlohmann::json Json;
 std::condition_variable gMainCondition;
 volatile bool gSignalNum  = EXIT_SUCCESS;
 
-
 //--------//
 // SignalCallbackHandler
 //
@@ -55,7 +54,7 @@ int main(int argc, char const * argv[])
         lConfigLocation = argv[1];
     }
 
-	std::ifstream lFile(lConfigLocation);
+    std::ifstream lFile(lConfigLocation);
     if (lFile.fail())
     {
 #ifdef USE_LOGGER
@@ -63,10 +62,11 @@ int main(int argc, char const * argv[])
 #endif
         return EXIT_FAILURE;
     }
-	lJsonConfig = Json::parse(lFile);
+    lJsonConfig = Json::parse(lFile);
 
     // Create thread pool for executing the bot's commands.
-    AMAB::ThreadPool * lThreadPool = new AMAB::ThreadPool(1);
+    AMAB::ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
+    lThreadPool->Init(std::thread::hardware_concurrency());
 
     // Create and start our bot.
     dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig["token"]);
@@ -81,7 +81,6 @@ int main(int argc, char const * argv[])
 #endif
 
     delete lDiscordBot;
-    delete lThreadPool;
 
     return gSignalNum;
 }

@@ -8,7 +8,6 @@
 
 #include <cstring>
 #include <amabot/ThreadPool.hpp>
-#include <amabot/Logger.hpp>
 
 namespace AMAB
 {
@@ -26,7 +25,7 @@ namespace AMAB
 //--------//
 //
 ThreadTask::ThreadTask()
-    : mFunction(nullptr), mCallback(nullptr), mMessage(nullptr)
+    : mFunction(nullptr), mCallback(nullptr), mMessage(nullptr), mBot(nullptr)
 {
 }
 
@@ -43,9 +42,10 @@ ThreadTask::ThreadTask()
 //--------//
 //
 ThreadTask::ThreadTask(void * lMessage, int lSize)
+    : ThreadTask()
 {
     char * lBuffer = new char[lSize];
-    mMessage =  reinterpret_cast<void *>(lBuffer);
+    mMessage = reinterpret_cast<void *>(lBuffer);
     memcpy(mMessage, lMessage, lSize);
 }
 
@@ -71,9 +71,9 @@ ThreadTask::~ThreadTask()
 //========//
 
 //--------//
-// ThreadPool
+// Init
 //
-// Constructor.
+// Initializes the thread pool. THIS SHOULD ONLY BE CALLED ONCE.
 //
 // param[in]    lNumThreads    Number of threads for the pool to create and manage.
 // param[in]    lResourcelimit The max limit of resources this pool will service. Default
@@ -81,15 +81,15 @@ ThreadTask::~ThreadTask()
 //                             for more information.                      
 //--------//
 //
-ThreadPool::ThreadPool(int lNumThreads, int lResourceLimit)
-    : mNumThreads(lNumThreads), mStopThreads(false)
+void ThreadPool::Init(int lNumThreads, int lResourceLimit)
 {
+    mNumThreads = lNumThreads;
     SetResourceLimit(lResourceLimit);
     Start();
 #ifdef USE_LOGGER
     AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
-    lLogger->Log("Starting Thread Pool with " + mNumThreads + " threads");
-    lLogger->Log("Setting resource limit to " + mNumThreads);
+    lLogger->Log("Starting Thread Pool with " + std::to_string(mNumThreads) + " threads");
+    lLogger->Log("Setting resource limit to " + std::to_string(lResourceLimit));
 #endif
 }
 
@@ -97,7 +97,7 @@ ThreadPool::ThreadPool(int lNumThreads, int lResourceLimit)
 // ~ThreadPool
 //
 // Destructor.
-// This will delete the memory for the message.  
+// Stop all threads and cleanup any pending tasks from the queue.  
 //--------//
 //
 ThreadPool::~ThreadPool(void)
@@ -198,6 +198,11 @@ void ThreadPool::Stop(void)
 //
 bool ThreadPool::AddTask(ThreadTask * lTask)
 {
+    if (lTask->mFunction == nullptr || lTask->mBot == nullptr)
+    {
+        return false;
+    }
+
     bool lCanAdd = mNotAtLimit();
 
     if(lCanAdd)
@@ -235,11 +240,7 @@ void ThreadPool::ThreadLoop(void)
             lTask = mTasks.front();
             mTasks.pop();
         }
-
-        if(lTask->mFunction)
-        {
-            lTask->mFunction(lTask->mMessage, lTask->mCallback);
-        }
+        lTask->mFunction(lTask, nullptr);
         delete lTask;
     }
 }

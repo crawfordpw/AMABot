@@ -20,7 +20,7 @@
 
 ## Building
 
-Once all the depencies have been acquired:
+Once all the dependencies have been acquired:
 
 ```
 cmake -B ./build

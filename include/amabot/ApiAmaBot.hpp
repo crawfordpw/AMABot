@@ -28,6 +28,8 @@ typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *)> SlashCo
 // Forward Declarations
 dpp::cluster * CreateBot(std::string lBotToken);
 void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent);
+void testfunc(ThreadTask * lTask, void * lMessage);
+void testcallback(ThreadTask * lTask, void * lMessage);
 
 //========//
 // SlashCommand
@@ -38,8 +40,8 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent);
 struct SlashCommand
 {
     SlashCommandFunction             mFunction;
-    std::vector<dpp::command_option> mParameters = {};
     const char *                     mDescription;
+    std::vector<dpp::command_option> mParameters = {};
 };
 
 // Externs
