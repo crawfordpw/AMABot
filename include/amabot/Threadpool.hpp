@@ -24,7 +24,13 @@ namespace AMAB
 // ThreadTask
 //
 // This is the structure that each thread in the pool 
-// will operate on.
+// will operate on to fulfill a command request. This includes
+// everything that a task may need to reply back to discord
+// with a message. Since this is happening in a separate thread from
+// where we received the message event, some of that information may
+// already by gone by the time we actually service the request. Therefore,
+// this attempts to copy the relevant informatin in order to properly
+// reply back when complete.
 //========//
 
 class ThreadTask
@@ -37,10 +43,14 @@ class ThreadTask
         ThreadTask(void * lMessage, int lSize);
         ~ThreadTask();
 
-        ThreadCallback mFunction;   // The main work for the task to perform.
-        ThreadCallback mCallback;   // A callback once the main work is complete.
-        void *         mMessage;    // Message for function to operate on.
-        dpp::cluster * mBot;        // Discord bot.
+        ThreadCallback        mFunction;    // The main work for the task to perform.
+        ThreadCallback        mCallback;    // A callback once the main work is complete.
+        void *                mMessage;     // Message for main function to operate on.
+        dpp::discord_client * mClient;      // Discord  client requesting the work. 
+        dpp::snowflake        mChannelId;   // Channel id this request came from.
+        dpp::snowflake        mGuildId;     // Guild id this request came from.
+        std::string           mToken;       // Interaction token for editing a response once
+                                            // the bot is in a "thinking" state.
         // TODO: Thinking about putting a name here to access an AI model's config json endpoint structure.
         //       Or maybe the pointer to the part of json structure that contains it.
 };

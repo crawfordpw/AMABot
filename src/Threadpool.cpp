@@ -25,7 +25,7 @@ namespace AMAB
 //--------//
 //
 ThreadTask::ThreadTask()
-    : mFunction(nullptr), mCallback(nullptr), mMessage(nullptr), mBot(nullptr)
+    : mFunction(nullptr), mCallback(nullptr), mMessage(nullptr), mClient(nullptr)
 {
 }
 
@@ -198,7 +198,7 @@ void ThreadPool::Stop(void)
 //
 bool ThreadPool::AddTask(ThreadTask * lTask)
 {
-    if (lTask->mFunction == nullptr || lTask->mBot == nullptr)
+    if (lTask->mFunction == nullptr || lTask->mClient == nullptr)
     {
         return false;
     }

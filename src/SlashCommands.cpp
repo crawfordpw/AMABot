@@ -42,14 +42,24 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent)
     AMAB::Logger::GetInstance()->Log("Parameter is: " + lParameter);
 #endif
 
-    lTask = new ThreadTask(const_cast<char *>(lParameter.c_str()), lParameter.length());
-    lTask->mBot = lDiscordBot;
+    // Plus 1 to include the null terminator!
+    lTask = new ThreadTask(const_cast<char *>(lParameter.c_str()), lParameter.length() + 1);
+    lTask->mClient = lEvent->from;
+    lTask->mChannelId = lEvent->command.channel_id;
+    lTask->mGuildId = lEvent->command.guild_id;
+    lTask->mToken = lEvent->command.token;
     lTask->mFunction = AMAB::testfunc;
     lTask->mCallback = AMAB::testcallback;
 
-    lThreadPool->AddTask(lTask);
-
-    lEvent->reply("This is a test");
+    if (lThreadPool->AddTask(lTask))
+    {
+        //lEvent->reply("Your correspondence has been sent successfully. Please hold.");
+        lEvent->thinking();
+    }
+    else
+    {
+        lEvent->reply("Oh, dear. Looks like the mail is backed up. Please try again at a later time.");
+    }
 }
 
 };
