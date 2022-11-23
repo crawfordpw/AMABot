@@ -12,6 +12,9 @@
 #include <map>
 #include <dpp/dpp.h>
 #include <dpp/nlohmann/json.hpp>
+#include <curlpp/cURLpp.hpp>
+#include <curlpp/Easy.hpp>
+#include <curlpp/Options.hpp>
 #include <AmaBotConfig.h>
 #include "Threadpool.hpp"
 
@@ -19,15 +22,17 @@
 #include "Logger.hpp"
 #endif
 
+typedef nlohmann::json Json;
+
 namespace AMAB
 {
 
 // Typedefs
-typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *)> SlashCommandFunction;
+typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *, Json &)> SlashCommandFunction;
 
 // Forward Declarations
-dpp::cluster * CreateBot(std::string lBotToken);
-void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent);
+dpp::cluster * CreateBot(Json & lJson);
+void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson);
 void testfunc(ThreadTask * lTask, void * lMessage);
 void testcallback(ThreadTask * lTask, void * lMessage);
 

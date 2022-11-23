@@ -21,10 +21,10 @@ namespace AMAB
 // returns     A bot instance. This expects the caller to delete the instance.
 //--------//
 //
-dpp::cluster * CreateBot(std::string lBotToken)
+dpp::cluster * CreateBot(Json & lJson)
 {
     // Create the discord bot.
-    dpp::cluster * lDiscordBot = new dpp::cluster(lBotToken);
+    dpp::cluster * lDiscordBot = new dpp::cluster(lJson["token"]);
 
 #ifdef USE_LOGGER
     // Output log messages to stdout.
@@ -55,14 +55,14 @@ dpp::cluster * CreateBot(std::string lBotToken)
 
     // This will handle each of our slash commands and dispatch them to the 
     // correct handle function.
-    lDiscordBot->on_slashcommand([lDiscordBot](const dpp::slashcommand_t & lEvent)
+    lDiscordBot->on_slashcommand([lDiscordBot, &lJson](const dpp::slashcommand_t & lEvent)
     {
         dpp::command_interaction lCommandData   = lEvent.command.get_command_interaction();
         auto lCommandIterator                   = AMAB::gSlashCommands.find(lCommandData.name);
 
         if (lCommandIterator != AMAB::gSlashCommands.end())
         {
-            lCommandIterator->second.mFunction(lDiscordBot, &lEvent);
+            lCommandIterator->second.mFunction(lDiscordBot, &lEvent, lJson);
         }
     });
 

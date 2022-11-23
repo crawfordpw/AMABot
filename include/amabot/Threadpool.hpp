@@ -17,6 +17,8 @@
 #include <atomic>
 #include <dpp/dpp.h>
 
+typedef nlohmann::json Json;
+
 namespace AMAB
 {
 
@@ -51,8 +53,7 @@ class ThreadTask
         dpp::snowflake        mGuildId;     // Guild id this request came from.
         std::string           mToken;       // Interaction token for editing a response once
                                             // the bot is in a "thinking" state.
-        // TODO: Thinking about putting a name here to access an AI model's config json endpoint structure.
-        //       Or maybe the pointer to the part of json structure that contains it.
+        Json *                mJson;
 };
 
 //========//

@@ -32,7 +32,7 @@ const std::map<std::string, AMAB::SlashCommand> gSlashCommands =
 // param[in]   lEvent   An event from the slash command.
 //--------//
 //
-void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent)
+void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson)
 {
     ThreadTask * lTask;
     ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
@@ -48,6 +48,7 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent)
     lTask->mChannelId = lEvent->command.channel_id;
     lTask->mGuildId = lEvent->command.guild_id;
     lTask->mToken = lEvent->command.token;
+    lTask->mJson = &lJson["models"]["test"];
     lTask->mFunction = AMAB::testfunc;
     lTask->mCallback = AMAB::testcallback;
 

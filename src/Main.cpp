@@ -9,8 +9,6 @@
 #include <unistd.h>
 #include <amabot/ApiAmaBot.hpp>
 
-typedef nlohmann::json Json;
-
 std::condition_variable gMainCondition;
 volatile bool gSignalNum  = EXIT_SUCCESS;
 
@@ -64,12 +62,15 @@ int main(int argc, char const * argv[])
     }
     lJsonConfig = Json::parse(lFile);
 
+    // Initalize curlpp
+    curlpp::initialize(CURL_GLOBAL_ALL);
+
     // Create thread pool for executing the bot's commands.
     AMAB::ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
     lThreadPool->Init(std::thread::hardware_concurrency());
 
     // Create and start our bot.
-    dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig["token"]);
+    dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig);
     lDiscordBot->start(dpp::st_return);
 
     // Wait for SIGINT or SIGTERM signal to unblock and terminate gracefully.
@@ -81,6 +82,7 @@ int main(int argc, char const * argv[])
 #endif
 
     delete lDiscordBot;
+    curlpp::terminate();
 
     return gSignalNum;
 }

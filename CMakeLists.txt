@@ -20,7 +20,7 @@ set(DPP_INSTALL "OFF")
 set(DPP_BUILD_TEST "OFF")
 
 # Curlpp options
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include(FindPkgConfig)
 #pkg_check_modules(CURLPP REQUIRED curlpp)
@@ -71,7 +71,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME}
     pthread
     dpp
-    ${CURLPP_LDFLAGS}
+    curlpp
 )
 
 #add_library(${PROJECT_NAME} OBJECT ${SOURCES})
@@ -79,7 +79,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${EXTERNAL_DEPENDENCIES}DPP/include
-    #${EXTERNAL_DEPENDENCIES}curlpp/include
+    ${EXTERNAL_DEPENDENCIES}curlpp/include/curlpp
     ${INCLUDES}
 )
 

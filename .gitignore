@@ -31,3 +31,4 @@ _deps
 *.out
 *.app
 config.json
+testserver
