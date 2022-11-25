@@ -30,10 +30,6 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
 
     // Build up our url and request json to send to the server.
     std::string lUrl = std::string(lJson["url"]) + std::string(lJson["endpoints"]["send_input"]["path"]);
-    for (auto & lElement : lJson["endpoints"]["send_input"]["path_params"])
-    {
-        lUrl += std::string(lElement);
-    }
     std::string lUserInput = "{\"" + std::string(lJson["endpoints"]["send_input"]["req_body"]) + "\": \"" + std::string(lTaskMessage) + "\"}";
 
     // Tried using the discord library's built-in http request function, but it seems to use the same thread
