@@ -40,6 +40,7 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
     // every time the request endpoint is the same. Doesn't make a whole lof of sense to me as it essentially
     // serializes the output, defeating the whole purpose of the architecture and design goals of this bot...
     // Not possible to decouple that from the dpp library, so using curlpp instead.
+    int                     lStatus;
     curlpp::Easy            lRequest;
     std::ostringstream      lResponse;
     std::list<std::string>  lHeader     = { "Content-Type: application/json", "accept: application/json" };
@@ -51,15 +52,25 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
     lLogger->Log("Json body: " + lUserInput);
 #endif
 
-    lRequest.setOpt(curlpp::options::Url(lUrl));
-    lRequest.setOpt(new curlpp::options::HttpHeader(lHeader));
-    lRequest.setOpt(new curlpp::options::PostFields(lUserInput));
-    lRequest.setOpt(new curlpp::options::PostFieldSize(lUserInput.length()));
-    lRequest.setOpt(new curlpp::options::WriteStream(&lResponse));
-    lRequest.perform();
+    try
+    {
+        lRequest.setOpt(curlpp::options::Url(lUrl));
+        lRequest.setOpt(new curlpp::options::HttpHeader(lHeader));
+        lRequest.setOpt(new curlpp::options::PostFields(lUserInput));
+        lRequest.setOpt(new curlpp::options::PostFieldSize(lUserInput.length()));
+        lRequest.setOpt(new curlpp::options::WriteStream(&lResponse));
+        lRequest.perform();
 
+        lStatus = curlpp::infos::ResponseCode::get(lRequest);
+    }
+    catch (curlpp::RuntimeError & lError)
+    {
+#ifdef USE_LOGGER
+        lLogger->Log(lError.what());
+#endif
+        lStatus = AMAB::HTTP_SERVICE_UNAVAILABLE;
+    }
 
-    int lStatus = curlpp::infos::ResponseCode::get(lRequest);
     if (lStatus == AMAB::HTTP_OK)
     {
         lTask->mCallback(lTask, const_cast<char *>(lResponse.str().c_str()));
@@ -79,18 +90,17 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
 //
 void ReplyUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json lJson          = Json::parse(reinterpret_cast<char *>(lMessage));
-    std::string lReply  = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
+    Json         lJson   = Json::parse(reinterpret_cast<char *>(lMessage));
+    std::string  lReply  = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
+    dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
+
+    lMsg.set_guild_id(lTask->mGuildId);
+    lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
 
 #ifdef USE_LOGGER
     AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
     lLogger->Log("Reply msg: " + lReply);
 #endif
-
-    dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
-    lMsg.set_guild_id(lTask->mGuildId);
-
-    lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
 }
 
 //--------//
@@ -107,11 +117,12 @@ void UserInputError(ThreadTask * lTask, int lErrorCode)
     switch(lErrorCode)
     {
         // Intentional fallthrough for now since idk what to do with them!
+        case AMAB::HTTP_SERVICE_UNAVAILABLE:
         case AMAB::HTTP_BAD_REQUEST:
         case AMAB::HTTP_UNAUTHORIZED:
         case AMAB::HTTP_NOT_FOUND:
         default:
-            lReply += "Dear me, they appear to be out to lunch!";
+            lReply += "Dear me, " + std::string((*lTask->mJson)["name"]) + " appears to be out to lunch!";
             break;
     }
     dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);

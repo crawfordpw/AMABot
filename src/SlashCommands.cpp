@@ -36,11 +36,11 @@ const std::map<std::string, AMAB::SlashCommand> gSlashCommands =
 void TextReplyToUserInput(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson, std::string lModel)
 {
     // Send a ping to the server. If no response, no need to go further.
-    std::string lUrl  = std::string(lJson["models"][lModel]["url"]) + std::string(lJson["models"][lModel]["endpoints"]["ping"]);
+    std::string lUrl = std::string(lJson["models"][lModel]["url"]) + std::string(lJson["models"][lModel]["endpoints"]["ping"]);
     if (AMAB::PingServer(lUrl) != AMAB::HTTP_OK)
     {
         std::string lName = std::string(lJson["models"][lModel]["name"]);
-        lEvent->reply(lName + " could not be reached! They may not be home.");
+        lEvent->reply(lName + " could not be reached! They may not be home or are very busy.");
         return;
     }
 
@@ -80,6 +80,5 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json &
 {
     TextReplyToUserInput(lDiscordBot, lEvent, lJson, "test");
 }
-
 
 };

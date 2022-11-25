@@ -90,11 +90,22 @@ size_t DoNothing(char* c , size_t s, size_t ss) { return s * ss; }
 long PingServer(std::string & lUrl)
 {
     curlpp::Easy lRequest;
-    lRequest.setOpt(curlpp::options::Url(lUrl));
-    lRequest.setOpt(new curlpp::options::CustomRequest("GET"));
-    lRequest.setOpt(new curlpp::options::WriteFunction(DoNothing));
-    lRequest.perform();
-    return curlpp::infos::ResponseCode::get(lRequest);
+    try
+    {
+        lRequest.setOpt(curlpp::options::Url(lUrl));
+        lRequest.setOpt(new curlpp::options::CustomRequest("GET"));
+        lRequest.setOpt(new curlpp::options::WriteFunction(DoNothing));
+        lRequest.setOpt(new curlpp::options::Timeout(2));
+        lRequest.perform();
+        return curlpp::infos::ResponseCode::get(lRequest);
+    }
+    catch (curlpp::RuntimeError & lError)
+    {
+#ifdef USE_LOGGER
+        AMAB::Logger::GetInstance()->Log(lError.what());
+#endif
+        return AMAB::HTTP_SERVICE_UNAVAILABLE;
+    }
 }
 
 };
