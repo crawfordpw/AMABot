@@ -24,18 +24,22 @@ const std::map<std::string, AMAB::SlashCommand> gSlashCommands =
 };
 
 //--------//
-// test
+// TextReplyToUserInput
 //
-// .
+// This is a generalized function for every model that has a command for replying
+// to some user sent input. This will update the event reply in the text channel
+// this command was sent from. It should be called from one of the Slash command
+// function pointers in gSlashCommands.
+// lModel is the "model" string in the config json.
 //--------//
 //
-void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson)
+void TextReplyToUserInput(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson, std::string lModel)
 {
     // Send a ping to the server. If no response, no need to go further.
-    std::string lName = std::string(lJson["models"]["test"]["name"]);
-    std::string lUrl  = std::string(lJson["models"][lName]["url"]) + std::string(lJson["models"][lName]["endpoints"]["ping"]);
+    std::string lUrl  = std::string(lJson["models"][lModel]["url"]) + std::string(lJson["models"][lModel]["endpoints"]["ping"]);
     if (AMAB::PingServer(lUrl) != AMAB::HTTP_OK)
     {
+        std::string lName = std::string(lJson["models"][lModel]["name"]);
         lEvent->reply(lName + " could not be reached! They may not be home.");
         return;
     }
@@ -51,7 +55,7 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json &
     lTask->mChannelId   = lEvent->command.channel_id;
     lTask->mGuildId     = lEvent->command.guild_id;
     lTask->mToken       = lEvent->command.token;
-    lTask->mJson        = &lJson["models"][lName];
+    lTask->mJson        = &lJson["models"][lModel];
     lTask->mFunction    = AMAB::SendUserInput;
     lTask->mCallback    = AMAB::ReplyUserInput;
 
@@ -65,5 +69,17 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json &
         delete lTask;
     }
 }
+
+//--------//
+// test
+//
+// .
+//--------//
+//
+void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson)
+{
+    TextReplyToUserInput(lDiscordBot, lEvent, lJson, "test");
+}
+
 
 };
