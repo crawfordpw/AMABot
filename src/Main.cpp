@@ -67,7 +67,7 @@ int main(int argc, char const * argv[])
 
     // Create thread pool for executing the bot's commands.
     AMAB::ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
-    lThreadPool->Init(std::thread::hardware_concurrency());
+    lThreadPool->Init(std::thread::hardware_concurrency(), 100);
 
     // Create and start our bot.
     dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig);

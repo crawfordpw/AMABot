@@ -15,6 +15,7 @@
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
+#include <curlpp/Infos.hpp>
 #include <AmaBotConfig.h>
 #include "Threadpool.hpp"
 
@@ -33,8 +34,18 @@ typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *, Json &)>
 // Forward Declarations
 dpp::cluster * CreateBot(Json & lJson);
 void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson);
-void testfunc(ThreadTask * lTask, void * lMessage);
-void testcallback(ThreadTask * lTask, void * lMessage);
+void SendUserInput(ThreadTask * lTask, void * lMessage);
+void ReplyUserInput(ThreadTask * lTask, void * lMessage);
+
+// HTTP related stuff.
+enum
+{
+    HTTP_OK             = 200,
+    HTTP_BAD_REQUEST    = 400,
+    HTTP_UNAUTHORIZED   = 401,
+    HTTP_NOT_FOUND      = 404,
+};
+long PingServer(std::string & lUrl);
 
 //========//
 // SlashCommand

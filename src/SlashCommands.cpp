@@ -27,39 +27,42 @@ const std::map<std::string, AMAB::SlashCommand> gSlashCommands =
 // test
 //
 // .
-//
-// param[in]   lEvent   The instance of the discord bot.
-// param[in]   lEvent   An event from the slash command.
 //--------//
 //
 void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson)
 {
+    // Send a ping to the server. If no response, no need to go further.
+    std::string lName = std::string(lJson["models"]["test"]["name"]);
+    std::string lUrl  = std::string(lJson["models"][lName]["url"]) + std::string(lJson["models"][lName]["endpoints"]["ping"]);
+    if (AMAB::PingServer(lUrl) != AMAB::HTTP_OK)
+    {
+        lEvent->reply(lName + " could not be reached! They may not be home.");
+        return;
+    }
+
+    // Looks like the server is there, continue creating our thread task.
     ThreadTask * lTask;
     ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
     std::string  lParameter  = std::get<std::string>(lEvent->get_parameter("message"));
 
-#ifdef USE_LOGGER
-    AMAB::Logger::GetInstance()->Log("Parameter is: " + lParameter);
-#endif
-
     // Plus 1 to include the null terminator!
     lTask = new ThreadTask(const_cast<char *>(lParameter.c_str()), lParameter.length() + 1);
-    lTask->mClient = lEvent->from;
-    lTask->mChannelId = lEvent->command.channel_id;
-    lTask->mGuildId = lEvent->command.guild_id;
-    lTask->mToken = lEvent->command.token;
-    lTask->mJson = &lJson["models"]["test"];
-    lTask->mFunction = AMAB::testfunc;
-    lTask->mCallback = AMAB::testcallback;
+    lTask->mClient      = lEvent->from;
+    lTask->mChannelId   = lEvent->command.channel_id;
+    lTask->mGuildId     = lEvent->command.guild_id;
+    lTask->mToken       = lEvent->command.token;
+    lTask->mJson        = &lJson["models"][lName];
+    lTask->mFunction    = AMAB::SendUserInput;
+    lTask->mCallback    = AMAB::ReplyUserInput;
 
     if (lThreadPool->AddTask(lTask))
     {
-        //lEvent->reply("Your correspondence has been sent successfully. Please hold.");
         lEvent->thinking();
     }
     else
     {
         lEvent->reply("Oh, dear. Looks like the mail is backed up. Please try again at a later time.");
+        delete lTask;
     }
 }
 

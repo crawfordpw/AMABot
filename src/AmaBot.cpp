@@ -69,4 +69,32 @@ dpp::cluster * CreateBot(Json & lJson)
     return lDiscordBot;
 }
 
+//--------//
+// DoNothing
+//
+// For whatever reason, curlpp will always print the response for
+// GET requests. No idea why that is the default option, but using
+// this callback with a WriteFunction option stops that.
+//--------//
+size_t DoNothing(char* c , size_t s, size_t ss) { return s * ss; }
+
+//--------//
+// PingServer
+//
+// Pings an http endpoint at the given url.
+//
+// param[in]   lUrl     The url to ping.
+// returns  HTTP status code.
+//--------//
+//
+long PingServer(std::string & lUrl)
+{
+    curlpp::Easy lRequest;
+    lRequest.setOpt(curlpp::options::Url(lUrl));
+    lRequest.setOpt(new curlpp::options::CustomRequest("GET"));
+    lRequest.setOpt(new curlpp::options::WriteFunction(DoNothing));
+    lRequest.perform();
+    return curlpp::infos::ResponseCode::get(lRequest);
+}
+
 };

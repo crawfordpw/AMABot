@@ -8,6 +8,8 @@
 
 #include <cstring>
 #include <amabot/ThreadPool.hpp>
+#include <amabot/Logger.hpp>
+#include <AmaBotConfig.h>
 
 namespace AMAB
 {

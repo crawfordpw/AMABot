@@ -2,7 +2,7 @@
 //
 // Callbacks.cpp
 //
-// This file contains all the cllback for each slash command..
+// This file contains all the callbacks for each slash command..
 //
 /////////////////////////////////////////////////////////////////////
 
@@ -12,78 +12,110 @@
 namespace AMAB
 {
 
+void UserInputError(ThreadTask * lTask, int lErrorCode);
+
 //--------//
-// test
+// SendUserInput
 //
-// .
-//
-// param[in]   lEvent   The instance of the discord bot.
-// param[in]   lEvent   An event from the slash command.
+// This is a function that can be called by a task to send a user
+// input string to a rest server so it can be processed. This will
+// wait for a response back and execute the callback function for
+// further processing of the response.
 //--------//
 //
-void testfunc(ThreadTask * lTask, void * lMessage)
+void SendUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json lJson = (*lTask->mJson);
+    Json lJson          = (*lTask->mJson);
     char * lTaskMessage = reinterpret_cast<char *>(lTask->mMessage);
 
+    // Build up our url and request json to send to the server.
     std::string lUrl = std::string(lJson["url"]) + std::string(lJson["endpoints"]["send_input"]["path"]);
     for (auto & lElement : lJson["endpoints"]["send_input"]["path_params"])
     {
         lUrl += std::string(lElement);
     }
-    std::string lMyData = "{\"" + std::string(lJson["endpoints"]["send_input"]["req_body"]) + "\": \"" + std::string(lTaskMessage) + "\"}";
-#ifdef USE_LOGGER
-    AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
-    lLogger->Log("Json url: " + lUrl);
-    lLogger->Log("Json body: " + lMyData);
-#endif
+    std::string lUserInput = "{\"" + std::string(lJson["endpoints"]["send_input"]["req_body"]) + "\": \"" + std::string(lTaskMessage) + "\"}";
 
     // Tried using the discord library's built-in http request function, but it seems to use the same thread
-    // everytime the request endpoint is the same. Doesn't make a whole lof of sense to me as it essentially
+    // every time the request endpoint is the same. Doesn't make a whole lof of sense to me as it essentially
     // serializes the output, defeating the whole purpose of the architecture and design goals of this bot...
     // Not possible to decouple that from the dpp library, so using curlpp instead.
-    curlpp::Easy lRequest;
+    curlpp::Easy            lRequest;
+    std::ostringstream      lResponse;
+    std::list<std::string>  lHeader     = { "Content-Type: application/json", "accept: application/json" };
+
+#ifdef USE_LOGGER
+    AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
+    //lRequest.setOpt(curlpp::options::Verbose(true));
+    lLogger->Log("Json url: " + lUrl);
+    lLogger->Log("Json body: " + lUserInput);
+#endif
+
     lRequest.setOpt(curlpp::options::Url(lUrl));
-    std::list<std::string> lHeader = 
-    {
-        "Content-Type: application/json",
-        "accept: application/json"
-    };
-    std::ostringstream lResponse;
     lRequest.setOpt(new curlpp::options::HttpHeader(lHeader));
-    lRequest.setOpt(new curlpp::options::PostFields(lMyData));
-    lRequest.setOpt(new curlpp::options::PostFieldSize(lMyData.length()));
+    lRequest.setOpt(new curlpp::options::PostFields(lUserInput));
+    lRequest.setOpt(new curlpp::options::PostFieldSize(lUserInput.length()));
     lRequest.setOpt(new curlpp::options::WriteStream(&lResponse));
     lRequest.perform();
 
-    lTask->mCallback(lTask, const_cast<char *>(lResponse.str().c_str()));
+
+    int lStatus = curlpp::infos::ResponseCode::get(lRequest);
+    if (lStatus == AMAB::HTTP_OK)
+    {
+        lTask->mCallback(lTask, const_cast<char *>(lResponse.str().c_str()));
+    }
+    else
+    {
+        UserInputError(lTask, lStatus);
+    }
 }
 
 //--------//
-// test
+// ReplyUserInput
 //
-// .
-//
-// param[in]   lEvent   The instance of the discord bot.
-// param[in]   lEvent   An event from the slash command.
+// A generic callback function to update the discord bot's "thinking" state
+// with a response message from the server when a user sends a message.
 //--------//
 //
-void testcallback(ThreadTask * lTask, void * lMessage)
+void ReplyUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json lJson = Json::parse(reinterpret_cast<char *>(lMessage));
+    Json lJson          = Json::parse(reinterpret_cast<char *>(lMessage));
+    std::string lReply  = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
 
-    std::string lStr(lJson["reply"]);
 #ifdef USE_LOGGER
     AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
-    lLogger->Log("Made it to testcallback!");
-    lLogger->Log("Reply msg: " + lStr);
+    lLogger->Log("Reply msg: " + lReply);
 #endif
 
-    dpp::message lMsg(lTask->mChannelId, lStr, dpp::message_type::mt_application_command);
+    dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
     lMsg.set_guild_id(lTask->mGuildId);
-    sleep(5);
 
-    //lTask->mBot->message_create(lMsg);
+    lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
+}
+
+//--------//
+// UserInputError
+//
+// A generic callback function to update the discord bot's "thinking" state
+// with an error message if the server could not fulfill the request for
+// some reason.
+//--------//
+//
+void UserInputError(ThreadTask * lTask, int lErrorCode)
+{
+    std::string lReply = "Error " + std::to_string(lErrorCode) + ": ";
+    switch(lErrorCode)
+    {
+        // Intentional fallthrough for now since idk what to do with them!
+        case AMAB::HTTP_BAD_REQUEST:
+        case AMAB::HTTP_UNAUTHORIZED:
+        case AMAB::HTTP_NOT_FOUND:
+        default:
+            lReply += "Dear me, they appear to be out to lunch!";
+            break;
+    }
+    dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
+    lMsg.set_guild_id(lTask->mGuildId);
     lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
 }
 

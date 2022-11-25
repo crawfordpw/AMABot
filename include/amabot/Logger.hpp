@@ -34,7 +34,7 @@ class Logger
 
         static Logger * GetInstance() { static Logger cInstance; return &cInstance; }
 
-        void Log(std::string lMessage) { std::cout << "--> " << lMessage << std::endl; };
+        void Log(std::string lMessage) { std::cout << "--> " << lMessage << "\n"; };
 };
 
 };
