@@ -43,7 +43,7 @@ followed by a brief description of any properties that may need more explanation
 ```json
 {
     "token": "YOUR BOT TOKEN HERE",
-    "num_pool_threads": N,
+    "num_pool_threads": 8,
     "models":
     {
         "MODEL NAME": 
