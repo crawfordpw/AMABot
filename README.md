@@ -24,7 +24,7 @@ This bot is designed to take user input from a discord user, run it through a ne
 
 ## Building
 
-Once all the dependencies have been acquired:
+Once all the dependencies have been acquired. From root directory:
 
 ```
 cmake -B ./build
@@ -36,9 +36,9 @@ make -C ./build
 The bot requires a json configuration file to know various aspects of
 itself during runtime, and where to route REST calls for the AI models.
 By default, a *config.json* file is expected to be at the root directory.
-If wanting to use a different json file it can also be passed as the first
-to the program. Below is the minimum Json required for the bot, followed by
-a brief description of any properties that may need more explanation.
+If wanting to use a different json file, it can also be passed as the first
+parameter to the program. Below is the minimum Json required for the bot,
+followed by a brief description of any properties that may need more explanation.
 
 ```json
 {
