@@ -87,7 +87,7 @@ size_t DoNothing(char* c , size_t s, size_t ss) { return s * ss; }
 // returns  HTTP status code.
 //--------//
 //
-long PingServer(std::string & lUrl)
+int PingServer(std::string & lUrl)
 {
     curlpp::Easy lRequest;
     try

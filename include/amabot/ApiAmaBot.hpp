@@ -46,7 +46,7 @@ enum
     HTTP_NOT_FOUND              = 404,
     HTTP_SERVICE_UNAVAILABLE    = 503,
 };
-long PingServer(std::string & lUrl);
+int PingServer(std::string & lUrl);
 
 //========//
 // SlashCommand

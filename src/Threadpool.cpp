@@ -166,7 +166,7 @@ void ThreadPool::Start(void)
     mThreads.resize(mNumThreads);
     for (int lIndex = 0; lIndex < mNumThreads; lIndex++)
     {
-        mThreads.at(lIndex) = std::thread(&ThreadPool::ThreadLoop, this);
+        mThreads.at(lIndex) = std::thread(&ThreadPool::ThreadLoop, this, lIndex);
     }
 }
 
@@ -227,11 +227,13 @@ bool ThreadPool::AddTask(ThreadTask * lTask)
 // the work is compelete.
 //--------//
 //
-void ThreadPool::ThreadLoop(void)
+void ThreadPool::ThreadLoop(int lIndex)
 {
+    ThreadTask * lTask;
+    dpp::utility::set_thread_name("AMAB::TPool" + std::to_string(lIndex));
+
     while (true)
     {
-        ThreadTask * lTask;
         {
             std::unique_lock<std::mutex> lLock(mMutex);
             mMutexCondition.wait(lLock, [this]() { return !mTasks.empty() || mStopThreads; });

@@ -83,7 +83,7 @@ class ThreadPool
 
         ThreadPool() : mStopThreads(false) {}
 
-        void ThreadLoop(void);
+        void ThreadLoop(int lIndex);
         void Start(void);
         void Stop(void);
         
