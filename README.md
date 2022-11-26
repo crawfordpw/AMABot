@@ -65,7 +65,7 @@ followed by a brief description of any properties that may need more explanation
 }
 ```
 
-- **num_pool_threads** - The number of thread pool threads to handle REST requests. By default this is set to std::thread::hardware_concurrency(). This is an optional attribute.
+- **num_pool_threads** - The number of thread pool threads to handle REST requests. By default this is set to `std::thread::hardware_concurrency()`. This is an optional attribute.
 - **models** - An object containing all the AI models the bot can use. Each key represents a single model. Each value is an object containing more information needed for the bot to interface with the model. Should be named exactly this.
 - **MODEL NAME** - This is a name refered to internally by the C++ code, and how the bot will refer to this specific model. This can be any name. This is what gets passed into the slash command callbacks using the parameter "lModel". Every model must contain at least what is described in the JSON above. There can be any number of these.
 - **name** - This is what gets printed out to the user whenever it needs to refer to the model.
