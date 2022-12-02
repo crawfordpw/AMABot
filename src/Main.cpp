@@ -47,6 +47,7 @@ int main(int argc, char const * argv[])
     Json        lJsonConfig;
     std::string lConfigLocation = "../config.json";
     int         lPoolThreads    = std::thread::hardware_concurrency();
+    int         lResources      = 0;
 
     // Get the new json config location if supplied.
     if (argc == 2)
@@ -70,13 +71,18 @@ int main(int argc, char const * argv[])
     {
         lPoolThreads = lJsonConfig["num_pool_threads"];
     }
+    // Grab number of threads for the thread pool.
+    if (lJsonConfig["max_num_msgs"] != nullptr)
+    {
+        lResources = lJsonConfig["max_num_msgs"];
+    }
 
     // Initalize curlpp
     curlpp::initialize(CURL_GLOBAL_ALL);
 
     // Create thread pool for executing the bot's commands.
     AMAB::ThreadPool * lThreadPool = AMAB::ThreadPool::GetInstance();
-    lThreadPool->Init(lPoolThreads, 100);
+    lThreadPool->Init(lPoolThreads, lResources);
 
     // Create and start our bot.
     dpp::cluster * lDiscordBot = AMAB::CreateBot(lJsonConfig);
