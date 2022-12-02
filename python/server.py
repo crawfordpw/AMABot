@@ -35,6 +35,7 @@ def handle_req(model_name: str, body: Body):
     if model_name == "test":
         lStr = "FastApi has Received input: " + body.user_input
         #time.sleep(5)
-        return {"reply": lLongString}
+        lStr += " " + lLongString + lLongString
+        return {"reply": lStr}
 
     raise HTTPException(status_code=404, detail="Model not found!")

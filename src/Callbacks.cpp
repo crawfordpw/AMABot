@@ -7,10 +7,17 @@
 /////////////////////////////////////////////////////////////////////
 
 #include <math.h>
+#include <ctype.h>
 #include <amabot/ApiAmaBot.hpp>
 
 namespace AMAB
 {
+
+// Simple counting identifier for large messages that
+// exceed discords message char limit. Used to help
+// identify messages if it's broken up by intermediate
+// messages not belonging to the same reply.
+static std::atomic<uint32_t> gMessageId = 1;
 
 void UserInputError(ThreadTask * lTask, int lErrorCode);
 
@@ -81,12 +88,12 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
 //
 void ReplyUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json         lJson      = Json::parse(reinterpret_cast<char *>(lMessage));
-    std::string  lReply     = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
-    long         lReplyLen  = lReply.length();
+    Json         lJson        = Json::parse(reinterpret_cast<char *>(lMessage));
+    std::string  lReply       = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
+    int          lReplyLength = lReply.length();
 
-    // Reply message can fit within Discords character limit.
-    if (lReplyLen <= AMAB::DISCORD_CHAR_LIMIT)
+    // Reply message can fit within Discord's character limit.
+    if (lReplyLength <= AMAB::DISCORD_CHAR_LIMIT)
     {
         dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
         lMsg.set_guild_id(lTask->mGuildId);
@@ -94,18 +101,62 @@ void ReplyUserInput(ThreadTask * lTask, void * lMessage)
         return;
     }
 
-    // Reply message needs to be broken up into smaller reply messages.
+    // Reply message needs to be broken up into smaller reply messages (chunks).
 
-    dpp::message lMsg(lTask->mChannelId, "Breaking up message into smaller chunks", dpp::message_type::mt_application_command);
+    int         lStartIndex  = 0;   // Index into the reply message to start each chunk at.
+    int         lChunkLength = 0;   // Length of the message chunk, which could be different from MSG_CHUNK_SIZE.
+    std::string lMessageId   = std::to_string(gMessageId.fetch_add(1));
+    std::vector<std::string> lChunks;
+
+    // Let the user know we are breaking up the message.
+    std::string lThinkingString = std::string((*lTask->mJson)["name"]) + " has a rather lengthy reply. Breaking it up into smaller segments to satisfy Discord. Assigning message id: ";
+    dpp::message lMsg(lTask->mChannelId, lThinkingString + lMessageId, dpp::message_type::mt_application_command);
     lMsg.set_guild_id(lTask->mGuildId);
     lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
 
-    for (int i = 0; i < lReplyLen; i+=AMAB::DISCORD_CHAR_LIMIT)
+    // Here we break up the reply from the AI model into chunks that discord can handle.
+    // We find the last word within the chunk size to break the chunk at for user convenience,
+    // and add the entire chunk into a vector. Once we find all chunks, we send out the discord
+    // messages by attaching a message id to them. This could be done within the first while loop
+    // without needing a vector, but I wanted to attach messages numbers to each message,
+    // and the number of chunks could potentionally grow since the beginning of the loop if some
+    // stars aligned.
+    while (lStartIndex < lReplyLength)
     {
-        dpp::message lMsg(lTask->mChannelId, lReply.substr(i, AMAB::DISCORD_CHAR_LIMIT), dpp::message_type::mt_application_command);
+        // Find the last word within the chunk size.
+        lChunkLength = AMAB::MSG_CHUNK_SIZE;
+        while (lChunkLength > 0)
+        {
+            if (isspace(lReply[lStartIndex + lChunkLength]))
+            {
+                break;
+            }
+            lChunkLength--;
+        }
+
+        // If ChunkLength is 0, that means the entire chunk has no spaces for
+        // some reason, so set the length to the default chunk size.
+        if (lChunkLength <= 0)
+        {
+            lChunkLength = AMAB::MSG_CHUNK_SIZE;
+        }
+        
+        lChunks.push_back(lReply.substr(lStartIndex, ++lChunkLength));
+        lStartIndex += lChunkLength;
+    }
+
+    // Now send all the chunks as discord messages.
+    int lNumChunks = lChunks.size();
+    std::string lIdString    = "Id: " + lMessageId;
+    std::string lChunkString = "/" + std::to_string(lNumChunks) + ")\n";
+
+    for (int i = 0; i < lNumChunks; i++)
+    {
+        std::string lString = lIdString + " (" + std::to_string(i+1) + lChunkString + lChunks.at(i);
+        dpp::message lMsg(lTask->mChannelId, lString, dpp::message_type::mt_application_command);
         lMsg.set_guild_id(lTask->mGuildId);
         lTask->mClient->creator->message_create(lMsg);
-    } 
+    }
 }
 
 //--------//

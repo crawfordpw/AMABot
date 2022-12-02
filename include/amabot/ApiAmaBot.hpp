@@ -41,7 +41,10 @@ void ReplyUserInput(ThreadTask * lTask, void * lMessage);
 enum
 {
     DISCORD_CHAR_LIMIT          = 2000,
-    MSG_CHUNK_SIZE              = DISCORD_CHAR_LIMIT - 10,
+    // 10 for the message number and total up to 3 digits each "(XXX/YYY) "
+    // 5 for id string "id: "; followed by
+    // 10 for max number of digits in unsigned int
+    MSG_CHUNK_SIZE              = DISCORD_CHAR_LIMIT - 25,
 };
 
 // HTTP related stuff.
