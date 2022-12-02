@@ -37,9 +37,17 @@ void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json &
 void SendUserInput(ThreadTask * lTask, void * lMessage);
 void ReplyUserInput(ThreadTask * lTask, void * lMessage);
 
+// Generic bot related stuff.
+enum
+{
+    DISCORD_CHAR_LIMIT          = 2000,
+    MSG_CHUNK_SIZE              = DISCORD_CHAR_LIMIT - 10,
+};
+
 // HTTP related stuff.
 enum
 {
+    REPLY_TIMEOUT               = 120,
     HTTP_OK                     = 200,
     HTTP_BAD_REQUEST            = 400,
     HTTP_UNAUTHORIZED           = 401,

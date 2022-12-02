@@ -6,8 +6,8 @@
 //
 /////////////////////////////////////////////////////////////////////
 
+#include <math.h>
 #include <amabot/ApiAmaBot.hpp>
-#include <unistd.h>
 
 namespace AMAB
 {
@@ -41,13 +41,6 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
     std::ostringstream      lResponse;
     std::list<std::string>  lHeader     = { "Content-Type: application/json", "accept: application/json" };
 
-#ifdef USE_LOGGER
-    AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
-    //lRequest.setOpt(curlpp::options::Verbose(true));
-    lLogger->Log("Json url: " + lUrl);
-    lLogger->Log("Json body: " + lUserInput);
-#endif
-
     try
     {
         lRequest.setOpt(curlpp::options::Url(lUrl));
@@ -55,6 +48,7 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
         lRequest.setOpt(new curlpp::options::PostFields(lUserInput));
         lRequest.setOpt(new curlpp::options::PostFieldSize(lUserInput.length()));
         lRequest.setOpt(new curlpp::options::WriteStream(&lResponse));
+        lRequest.setOpt(new curlpp::options::Timeout(AMAB::REPLY_TIMEOUT));
         lRequest.perform();
 
         lStatus = curlpp::infos::ResponseCode::get(lRequest);
@@ -62,6 +56,7 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
     catch (curlpp::RuntimeError & lError)
     {
 #ifdef USE_LOGGER
+        AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
         lLogger->Log(lError.what());
 #endif
         lStatus = AMAB::HTTP_SERVICE_UNAVAILABLE;
@@ -86,17 +81,31 @@ void SendUserInput(ThreadTask * lTask, void * lMessage)
 //
 void ReplyUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json         lJson   = Json::parse(reinterpret_cast<char *>(lMessage));
-    std::string  lReply  = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
-    dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
+    Json         lJson      = Json::parse(reinterpret_cast<char *>(lMessage));
+    std::string  lReply     = lJson[std::string((*lTask->mJson)["endpoints"]["send_input"]["res_body"])];
+    long         lReplyLen  = lReply.length();
 
+    // Reply message can fit within Discords character limit.
+    if (lReplyLen <= AMAB::DISCORD_CHAR_LIMIT)
+    {
+        dpp::message lMsg(lTask->mChannelId, lReply, dpp::message_type::mt_application_command);
+        lMsg.set_guild_id(lTask->mGuildId);
+        lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
+        return;
+    }
+
+    // Reply message needs to be broken up into smaller reply messages.
+
+    dpp::message lMsg(lTask->mChannelId, "Breaking up message into smaller chunks", dpp::message_type::mt_application_command);
     lMsg.set_guild_id(lTask->mGuildId);
     lTask->mClient->creator->interaction_response_edit(lTask->mToken, lMsg);
 
-#ifdef USE_LOGGER
-    AMAB::Logger * lLogger = AMAB::Logger::GetInstance();
-    lLogger->Log("Reply msg: " + lReply);
-#endif
+    for (int i = 0; i < lReplyLen; i+=AMAB::DISCORD_CHAR_LIMIT)
+    {
+        dpp::message lMsg(lTask->mChannelId, lReply.substr(i, AMAB::DISCORD_CHAR_LIMIT), dpp::message_type::mt_application_command);
+        lMsg.set_guild_id(lTask->mGuildId);
+        lTask->mClient->creator->message_create(lMsg);
+    } 
 }
 
 //--------//
