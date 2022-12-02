@@ -32,3 +32,4 @@ _deps
 *.app
 config.json
 testserver
+__pycache__
