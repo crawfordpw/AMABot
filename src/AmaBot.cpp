@@ -79,23 +79,34 @@ dpp::cluster * CreateBot(Json & lJson)
 size_t DoNothing(char* c , size_t s, size_t ss) { return s * ss; }
 
 //--------//
-// PingServer
+// EndpointGET
 //
-// Pings an http endpoint at the given url.
+// Issues a GET call to the specified Url.
 //
-// param[in]   lUrl     The url to ping.
+// param[in]   lUrl         The url for the GET request.
+// param[out]  lResponse    The response from the GET call. Pass in nullptr if
+//                          the caller doesn't care what the response is.
+// param[in]   lTimeout     How long to wait before timing out in seconds.
 // returns  HTTP status code.
 //--------//
 //
-int PingServer(std::string & lUrl)
+int EndpointGET(std::string & lUrl, std::ostringstream * lResponse, int lTimeout)
 {
     curlpp::Easy lRequest;
     try
     {
+        if (lResponse != nullptr)
+        {
+            lRequest.setOpt(new curlpp::options::WriteStream(lResponse));
+        }
+        else
+        {
+            lRequest.setOpt(new curlpp::options::WriteFunction(DoNothing));
+        }
+
         lRequest.setOpt(curlpp::options::Url(lUrl));
         lRequest.setOpt(new curlpp::options::CustomRequest("GET"));
-        lRequest.setOpt(new curlpp::options::WriteFunction(DoNothing));
-        lRequest.setOpt(new curlpp::options::Timeout(2));
+        lRequest.setOpt(new curlpp::options::Timeout(lTimeout));
         lRequest.perform();
         return curlpp::infos::ResponseCode::get(lRequest);
     }
@@ -106,6 +117,42 @@ int PingServer(std::string & lUrl)
 #endif
         return AMAB::HTTP_SERVICE_UNAVAILABLE;
     }
+}
+
+//--------//
+// SplitString
+//
+// Splits a given string by some delimiter into a vector of smaller
+// strings if possible.
+//
+// param[in]   lString       String to split.
+// param[in]   lDelimiter    What to split by, defaults to a space.
+// returns  Vector of strings.
+//--------//
+//
+std::vector<std::string> SplitString(std::string & lString, std::string lDelimiter)
+{
+    size_t lStart  = 0;
+    size_t lEnd    = lString.find(lDelimiter);
+    std::vector<std::string> lWords;
+
+    // There are no delimiters found in the string, so just add it to the vector.
+    if (lEnd == std::string::npos)
+    {
+        lWords.push_back(lString);
+    }
+    else
+    {
+        while (lEnd != std::string::npos)
+        {
+            lWords.push_back(lString.substr(lStart, lEnd - lStart));
+            lStart = lEnd + lDelimiter.size();
+            lEnd = lString.find(lDelimiter, lStart);
+        }
+        lWords.push_back(lString.substr(lStart, lEnd - lStart));
+    }
+    
+    return lWords;
 }
 
 };

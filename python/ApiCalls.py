@@ -22,7 +22,7 @@ def InitModels():
     lTestModel = TestModel(200)
     lTestModel.mIsRunning = True
 
-    gModels[lTestModel.GetInternalName()] = lTestModel
+    gModels[lTestModel.GetCommandName()] = lTestModel
 
 #-------#
 # Once we receive a request to generate some AI output,

@@ -71,10 +71,26 @@ int main(int argc, char const * argv[])
     {
         lPoolThreads = lJsonConfig["num_pool_threads"];
     }
-    // Grab number of threads for the thread pool.
+    // Grab number of number of resources to allocate to queue.
     if (lJsonConfig["max_num_msgs"] != nullptr)
     {
         lResources = lJsonConfig["max_num_msgs"];
+    }
+
+    // Preprocess all unique "running" endpoints for "whoisup" command and
+    // store them in a global vector. 
+    Json * lCommandJson;
+    for (auto & lCommandIterator : AMAB::gSlashCommands)
+    {
+        lCommandJson = &lJsonConfig["models"][lCommandIterator.first];
+        if (*lCommandJson != nullptr)
+        {
+            std::string lUrl = std::string((*lCommandJson)["url"]) + std::string((*lCommandJson)["endpoints"]["running"]);
+            if (std::find(AMAB::gRunningEndpoints.begin(), AMAB::gRunningEndpoints.end(), lUrl) == AMAB::gRunningEndpoints.end())
+            {
+                AMAB::gRunningEndpoints.push_back(lUrl);
+            }
+        }
     }
 
     // Initalize curlpp

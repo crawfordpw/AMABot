@@ -15,9 +15,9 @@ from Errors import ErrorCodes
 # this class and implement their own run method.
 #=======#
 class Model:
-    def __init__(self, lName : str, lInternalName : str, lMaxChars : int):
+    def __init__(self, lName : str, lCommandName : str, lMaxChars : int):
         self.__mName            = lName             # Name of the model.
-        self.__mInternalName    = lInternalName     # Corresponds to command name in Discord.
+        self.__mCommandName     = lCommandName      # Corresponds to command name in Discord (C++).
         self.__mMaxChars        = lMaxChars         # Max input the model can receive.
         self.mIsRunning         = False             # Flag to check if it's running or not.
 
@@ -28,10 +28,10 @@ class Model:
         return self.__mName
 
     #-------#
-    # Getter for internal (command) name.
+    # Getter for command name related to this model.
     #-------#
-    def GetInternalName(self):
-        return self.__mInternalName
+    def GetCommandName(self):
+        return self.__mCommandName
 
     #-------#
     # Is the current current within the max character limit the model could receive.

@@ -33,9 +33,13 @@ typedef std::function<void(dpp::cluster *, const dpp::slashcommand_t *, Json &)>
 
 // Forward Declarations
 dpp::cluster * CreateBot(Json & lJson);
+void RunningModels(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson);
 void test(dpp::cluster * lDiscordBot, const dpp::slashcommand_t * lEvent, Json & lJson);
 void SendUserInput(ThreadTask * lTask, void * lMessage);
 void ReplyUserInput(ThreadTask * lTask, void * lMessage);
+
+// Helpers
+std::vector<std::string> SplitString(std::string & lString, std::string lDelimiter = " ");
 
 // Generic bot related stuff.
 enum
@@ -57,7 +61,7 @@ enum
     HTTP_NOT_FOUND              = 404,
     HTTP_SERVICE_UNAVAILABLE    = 503,
 };
-int PingServer(std::string & lUrl);
+int EndpointGET(std::string & lUrl, std::ostringstream * lResponse, int lTimeout);
 
 //========//
 // SlashCommand
@@ -74,6 +78,7 @@ struct SlashCommand
 
 // Externs
 extern const std::map<std::string, SlashCommand> gSlashCommands;
+extern std::vector<std::string>                  gRunningEndpoints;
 
 };
 

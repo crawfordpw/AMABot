@@ -62,9 +62,10 @@ def Ping():
 @gApp.get("/running_models")
 def GetRunningModels():
     lReply = ""
-    for lModel in ApiCalls.gModels:
+    for lModel in ApiCalls.gModels.values():
         if lModel.mIsRunning:
-            lReply += lModel.GetInteralName() + " "
+            lReply += lModel.GetCommandName() + " "
+
     return { gReplyAttribute: lReply.strip() };
 
 #-------#

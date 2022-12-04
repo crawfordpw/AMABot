@@ -47,13 +47,14 @@ followed by a brief description of any properties that may need more explanation
     "max_num_msgs": 100,
     "models":
     {
-        "MODEL NAME": 
+        "COMMAND NAME": 
         {
             "name": "Test Model",
             "url": "URL TO SERVER",
             "endpoints":
             {
                 "ping": "/",
+                "running": "running_models",
                 "send_input":
                 {
                     "path": "/model/test",
@@ -70,11 +71,12 @@ followed by a brief description of any properties that may need more explanation
 - **num_pool_threads** - The number of thread pool threads to handle REST requests. By default this is set to `std::thread::hardware_concurrency()`. This is an optional attribute.
 - **max_num_msgs** - Max number of messages in message queue before the bot will start rejecting new messages. Default is unlimited (0) if this is unspecified. This is an optional attribute.
 - **models** - An object containing all the AI models the bot can use. Each key represents a single model. Each value is an object containing more information needed for the bot to interface with the model. Should be named exactly this.
-    - **MODEL NAME** - This is a name refered to internally by the C++ code, and how the bot will refer to this specific model. This can be any name. This is what gets passed into the slash command callbacks using the parameter "lModel". Every model must contain at least what is described in the JSON above. There can be any number of these.
+    - **COMMAND NAME** - This is the command name to send user input to a specific bot. This is what C++ uses internally for commands and referencing the models.
         - **name** - This is what gets printed out to the user whenever it needs to refer to the model.
         - **url** - Base url of the server the model is hosted on.
         - **endpoints** - An object containing any endpoints needed for the discord commands to interface with the model. Each key represents a separate endpoint.
             - **ping** - Path used for checking if server is still online.
+            - **running** - Path for checking which AI models are currently running. The reply JSON should be in the form of { "reply": "string of model commands seperated by spaces" }.
             - **send_input** - Endpoint for sending user text to the model.
             - **path** - Path to send the user text to for the model to process and generate a response.
             - **req_body** - The JSON property the server expects the input to be in.

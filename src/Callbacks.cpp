@@ -32,12 +32,11 @@ void UserInputError(ThreadTask * lTask, int lErrorCode);
 //
 void SendUserInput(ThreadTask * lTask, void * lMessage)
 {
-    Json lJson          = (*lTask->mJson);
     char * lTaskMessage = reinterpret_cast<char *>(lTask->mMessage);
 
     // Build up our url and request json to send to the server.
-    std::string lUrl = std::string(lJson["url"]) + std::string(lJson["endpoints"]["send_input"]["path"]);
-    std::string lUserInput = "{\"" + std::string(lJson["endpoints"]["send_input"]["req_body"]) + "\": \"" + std::string(lTaskMessage) + "\"}";
+    std::string lUrl = std::string((*lTask->mJson)["url"]) + std::string((*lTask->mJson)["endpoints"]["send_input"]["path"]);
+    std::string lUserInput = "{\"" + std::string((*lTask->mJson)["endpoints"]["send_input"]["req_body"]) + "\": \"" + std::string(lTaskMessage) + "\"}";
 
     // Tried using the discord library's built-in http request function, but it seems to use the same thread
     // every time the request endpoint is the same. Doesn't make a whole lof of sense to me as it essentially

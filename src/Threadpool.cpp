@@ -46,9 +46,12 @@ ThreadTask::ThreadTask()
 ThreadTask::ThreadTask(void * lMessage, int lSize)
     : ThreadTask()
 {
-    char * lBuffer = new char[lSize];
-    mMessage = reinterpret_cast<void *>(lBuffer);
-    memcpy(mMessage, lMessage, lSize);
+    if (lMessage)
+    {
+        char * lBuffer = new char[lSize];
+        mMessage = reinterpret_cast<void *>(lBuffer);
+        memcpy(mMessage, lMessage, lSize);
+    }
 }
 
 //--------//
