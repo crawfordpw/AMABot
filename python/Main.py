@@ -78,10 +78,11 @@ def SendUserInput(lModelName: str, lBody: Body):
     lErrorCode, lResult = ApiCalls.HandleModelRequest(lModelName, lBody.user_input)
 
     # Send back a reply depending on the error, if any.
-    if lErrorCode == ApiCalls.ErrorCodes.SUCCESS:
-        return { gReplyAttribute: lResult }
-    elif lErrorCode == ApiCalls.ErrorCodes.MODEL_NOT_FOUND:
+    if lErrorCode == ApiCalls.ErrorCodes.MODEL_NOT_FOUND:
         raise HTTPException(status_code=404, detail=lResult)
+    else:
+        return { gReplyAttribute: lResult }
+
 
 #########
 # Main entry point.
